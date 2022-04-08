@@ -4,11 +4,64 @@ export function valida(input) {
     if (validadores[tipoDeInput]) {
         validadores[tipoDeInput](input)
     }
+
+    if (input.validity.valid) {
+        input.parentElement.classList.remove('input-container--invalido')
+        input.parentElement.querySelector('.input-mensagem-erro').innerHTML = '';
+    } else {
+        input.parentElement.classList.add('input-container--invalido')
+        input.parentElement.querySelector('.input-mensagem-erro').innerHTML = mostraMensagemDeErro(tipoDeInput, input);
+    }
 }
 
-const validadores = {
-    dataNascimento: input => validaDataNascimento(input)
+const tipoDeErro = [
+    'valueMissing',
+    'typeMismatch',
+    'patternMismatch',
+    'customError'
+]
+
+
+const mensagensDeErro = {
+    nome: {
+        valueMissing: 'O campo Nome não pode estar vazio.'
+    },
+    email: {
+        valueMissing: 'O campo Email não pode estar vazio.',
+        typeMismatch: 'O email digitado não é válido.'
+    },
+    senha: {
+        valueMissing: 'O campo de Senha não pode estar vazio.',
+        patternMismatch: 'A senha deve ter entre 8 - 15 caracteres e deve incluir pelo menos uma letra maiúscula, uma letra minúscula e um dígito numérico.'
+    },
+    dataNascimento: {
+        valueMissing: 'O campo Data de Nascimento não pode estar vazio.',
+        customError: 'Você precisa ter mais que 18 anos para se cadastrar.'
+    },
+    cpf: {
+        valueMissing: 'O campo de CPF não pode estar vazio',
+        customError: 'O CPF digitado não é válido.'
+    }
 }
+
+
+const validadores = {
+    dataNascimento: input => validaDataNascimento(input),
+    cpf: input => validaCPF(input)
+}
+
+
+function mostraMensagemDeErro(tipoDeInput, input) {
+    let mensagem = '';
+    tipoDeErro.forEach(erro => {
+        if (input.validity[erro]) {
+            mensagem = mensagensDeErro[tipoDeInput][erro]
+        }
+    })
+    return mensagem;
+}
+
+
 
 function validaDataNascimento(input) {
     const dataRecebida = new Date(input.value)
@@ -29,4 +82,45 @@ function maiorQue18(data) {
     const dataMais18 = new Date(data.getUTCFullYear() + 18, data.getUTCMonth(), data.getUTCDate());
 
     return dataMais18 <= dataAtual;
+}
+
+
+
+//CPF
+
+function validaCPF(input) {
+    const cpfFormatado = input.value.replace(/\D/g, '')
+
+    let mensagem = '';
+
+    if (!checaCPFRepetido(cpfFormatado)) {
+        mensagem = 'O CPF digitado não é válido.'
+    }
+
+    input.setCustomValidity(mensagem);
+}
+
+function checaCPFRepetido(cpf) {
+    const valoresRepetidos = [
+        '00000000000',
+        '11111111111',
+        '22222222222',
+        '33333333333',
+        '44444444444',
+        '55555555555',
+        '66666666666',
+        '77777777777',
+        '88888888888',
+        '99999999999',
+    ]
+
+    let cpfValido = true
+
+    valoresRepetidos.forEach(valor => {
+        if (valor == cpf) {
+            cpfValido = false;
+        }
+    });
+
+    return cpfValido;
 }
